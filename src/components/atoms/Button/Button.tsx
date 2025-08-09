@@ -1,9 +1,13 @@
 interface ButtonProps {
   children: React.ReactNode;
-  variant?: 'primary' | 'secondary' | 'danger';
-  size?: 'sm' | 'md' | 'lg';
+  variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'warning' | 'info';
+  size?: 'sm' | 'md' | 'lg' | 'xs';
   onClick?: () => void;
   disabled?: boolean;
+  loading?: boolean;
+  outline?: boolean;
+  glass?: boolean;
+  type?: 'button' | 'submit' | 'reset';
 }
 
 export const Button: React.FC<ButtonProps> = ({
@@ -12,30 +16,43 @@ export const Button: React.FC<ButtonProps> = ({
   size = 'md',
   onClick,
   disabled = false,
+  loading = false,
+  outline = false,
+  glass = false,
+  type = 'button',
 }) => {
-  const baseClasses = 'rounded-lg font-medium transition-colors focus:outline-none focus:ring-2';
+  const baseClasses = 'btn';
   
   const variantClasses = {
-    primary: 'bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500',
-    secondary: 'bg-gray-200 hover:bg-gray-300 text-gray-900 focus:ring-gray-500',
-    danger: 'bg-red-600 hover:bg-red-700 text-white focus:ring-red-500',
+    primary: outline ? 'btn-outline btn-primary' : 'btn-primary',
+    secondary: outline ? 'btn-outline btn-secondary' : 'btn-secondary',
+    danger: outline ? 'btn-outline btn-error' : 'btn-error',
+    success: outline ? 'btn-outline btn-success' : 'btn-success',
+    warning: outline ? 'btn-outline btn-warning' : 'btn-warning',
+    info: outline ? 'btn-outline btn-info' : 'btn-info',
   };
   
   const sizeClasses = {
-    sm: 'px-3 py-1.5 text-sm',
-    md: 'px-4 py-2 text-base',
-    lg: 'px-6 py-3 text-lg',
+    xs: 'btn-xs',
+    sm: 'btn-sm',
+    md: '',
+    lg: 'btn-lg',
   };
   
-  const disabledClasses = disabled ? 'opacity-50 cursor-not-allowed' : '';
+  const modifierClasses = [
+    loading && 'loading',
+    glass && 'glass',
+    disabled && 'btn-disabled',
+  ].filter(Boolean).join(' ');
   
-  const className = `${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${disabledClasses}`;
+  const className = `${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${modifierClasses}`.trim();
   
   return (
     <button
       className={className}
       onClick={onClick}
-      disabled={disabled}
+      disabled={disabled || loading}
+      type={type}
     >
       {children}
     </button>
