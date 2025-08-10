@@ -8,6 +8,10 @@
 // - メダル残高管理
 // - 入金・払い出し処理
 // - 取引履歴管理
+// Day2拡張:
+// - 統計情報API
+// - バッチ処理API
+// - セッション管理強化
 //
 // ポート: 8000
 // データベース: SQLite (medalbank.db)
@@ -74,6 +78,10 @@ app.use('/api/balance', require('./routes/balance'))         // 残高関連API
 app.use('/api/transactions', require('./routes/transactions')) // 取引関連API
 app.use('/api/auth', require('./routes/auth'))               // 認証関連API
 
+// Day2拡張エンドポイント
+app.use('/api/stats', require('./routes/stats'))             // 統計情報API
+app.use('/api/batch', require('./routes/batch'))             // バッチ処理API
+
 // ===================================
 // エラーハンドリング
 // ===================================
@@ -89,7 +97,11 @@ app.use('*', (req, res) => {
       'GET /api/balance/:userId',
       'POST /api/transactions',
       'GET /api/transactions',
-      'POST /api/auth/login'
+      'POST /api/auth/login',
+      'GET /api/auth/me',
+      'GET /api/stats/user/:userId',
+      'GET /api/stats/summary/:userId',
+      'POST /api/batch/transactions'
     ]
   })
 })
@@ -110,12 +122,29 @@ app.listen(PORT, () => {
   console.log(`🚀 MedalBank API Server running on http://localhost:${PORT}`)
   console.log(`📍 Health Check: http://localhost:${PORT}/health`)
   console.log('📚 Available endpoints:')
-  console.log('   GET  /api/balance/1        - 残高取得（テストユーザーID=1）')
-  console.log('   POST /api/transactions     - 入金・払い出し処理')
-  console.log('   GET  /api/transactions     - 取引履歴取得')
-  console.log('   POST /api/auth/login       - ログイン認証')
+  console.log('   💰 残高管理:')
+  console.log('     GET  /api/balance/1        - 残高取得')
+  console.log('   📄 取引管理:')
+  console.log('     POST /api/transactions     - 入金・払い出し処理')
+  console.log('     GET  /api/transactions     - 取引履歴取得')
+  console.log('   🔐 認証管理:')
+  console.log('     POST /api/auth/login       - ログイン認証')
+  console.log('     GET  /api/auth/me          - 認証状態チェック')
+  console.log('   📊 統計情報 (Day2追加):')
+  console.log('     GET  /api/stats/user/1     - ユーザー統計')
+  console.log('     GET  /api/stats/summary/1  - サマリー統計')
+  console.log('   🚀 バッチ処理 (Day2追加):')
+  console.log('     POST /api/batch/transactions - 一括取引処理')
+  console.log('')
   console.log('')
   console.log('🔧 開発用テストコマンド:')
   console.log(`   curl http://localhost:${PORT}/health`)
   console.log(`   curl http://localhost:${PORT}/api/balance/1`)
+  console.log(`   curl http://localhost:${PORT}/api/stats/summary/1`)
+  console.log('')
+  console.log('🎉 Day2拡張機能が利用可能です！')
+  console.log('   - フィルタ付き取引履歴')
+  console.log('   - 統計情報ダッシュボード')
+  console.log('   - バッチ処理機能')
+  console.log('   - セッション管理強化')
 })
