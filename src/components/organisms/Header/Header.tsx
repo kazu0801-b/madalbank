@@ -29,13 +29,13 @@ export const Header: React.FC<HeaderProps> = ({
             
             <nav className="flex space-x-4">
               <Button variant="secondary" size="sm">
-                Home
+                ホーム
               </Button>
               <Button variant="secondary" size="sm">
-                About
+                概要
               </Button>
               <Button size="sm">
-                Login
+                ログイン
               </Button>
             </nav>
           </div>
