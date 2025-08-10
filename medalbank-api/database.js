@@ -5,9 +5,10 @@
 //
 // 機能:
 // - データベースファイル作成
-// - テーブル作成（users, balance, transactions）
+// - テーブル作成（users, balance, transactions, login_history）
 // - テストユーザー・初期データ作成
 // - データベース接続の提供
+// Day2拡張: ログイン履歴テーブル追加
 // ===================================
 
 const sqlite3 = require('sqlite3').verbose()
@@ -96,6 +97,26 @@ function initDatabase() {
         console.error('❌ transactionsテーブル作成エラー:', err.message)
       } else {
         console.log('✅ transactionsテーブル作成完了')
+      }
+    })
+
+    // Day2追加: ログイン履歴テーブル作成
+    // 目的: ユーザーのログイン履歴とセッション管理
+    db.run(`
+      CREATE TABLE IF NOT EXISTS login_history (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,  -- ログインID（自動採番）
+        user_id INTEGER NOT NULL,              -- ログインユーザーID
+        session_id TEXT NOT NULL,              -- セッションID（認証管理用）
+        device_info TEXT,                      -- デバイス情報（ブラウザ等）
+        ip_address TEXT,                       -- IPアドレス
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,  -- ログイン日時
+        FOREIGN KEY (user_id) REFERENCES users(id)      -- 外部キー制約
+      )
+    `, (err) => {
+      if (err) {
+        console.error('❌ login_historyテーブル作成エラー:', err.message)
+      } else {
+        console.log('✅ login_historyテーブル作成完了')
       }
     })
 
