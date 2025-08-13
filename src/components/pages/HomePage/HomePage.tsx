@@ -15,8 +15,9 @@ export const HomePage: React.FC = () => {
     if (typeof window !== 'undefined') {
       const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
       const email = localStorage.getItem('userEmail') || '';
+      const isGuest = localStorage.getItem('isGuest') === 'true';
       setIsLoggedIn(loggedIn);
-      setUserEmail(email);
+      setUserEmail(isGuest ? 'ゲスト' : email);
     }
   }, []);
 
@@ -31,8 +32,10 @@ export const HomePage: React.FC = () => {
   const handleLogout = () => {
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('userEmail');
+    localStorage.removeItem('isGuest');
     setIsLoggedIn(false);
     setUserEmail('');
+    router.push('/login');
   };
 
   const handleDeposit = () => {

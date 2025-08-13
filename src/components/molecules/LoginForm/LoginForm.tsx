@@ -4,12 +4,14 @@ import { Input } from '../../atoms/Input';
 
 interface LoginFormProps {
   onSubmit: (email: string, password: string) => void;
+  onGuestLogin?: () => void;
   isLoading?: boolean;
   error?: string;
 }
 
 export const LoginForm: React.FC<LoginFormProps> = ({
   onSubmit,
+  onGuestLogin,
   isLoading = false,
   error,
 }) => {
@@ -75,15 +77,47 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         </div>
       )}
 
-      <Button
-        type="submit"
-        variant="primary"
-        size="lg"
-        loading={isLoading}
-        disabled={isLoading}
-      >
-        {isLoading ? 'ログイン中...' : 'ログイン'}
-      </Button>
+      {onGuestLogin ? (
+        <div className="flex justify-center gap-4">
+          <div className="border border-gray-300 rounded-lg p-3 bg-white hover:border-blue-400 transition-colors">
+            <Button
+              type="submit"
+              variant="primary"
+              size="lg"
+              loading={isLoading}
+              disabled={isLoading}
+            >
+              {isLoading ? 'ログイン中...' : 'ログイン'}
+            </Button>
+          </div>
+          
+          <div className="border border-gray-300 rounded-lg p-3 bg-white hover:border-gray-400 transition-colors">
+            <Button
+              type="button"
+              variant="secondary"
+              size="lg"
+              onClick={onGuestLogin}
+              disabled={isLoading}
+            >
+              ゲストログイン
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex justify-center">
+          <div className="border border-gray-300 rounded-lg p-3 bg-white">
+            <Button
+              type="submit"
+              variant="primary"
+              size="lg"
+              loading={isLoading}
+              disabled={isLoading}
+            >
+              {isLoading ? 'ログイン中...' : 'ログイン'}
+            </Button>
+          </div>
+        </div>
+      )}
     </form>
   );
 };

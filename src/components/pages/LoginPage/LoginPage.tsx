@@ -3,9 +3,10 @@ import { LoginForm } from '../../molecules/LoginForm';
 
 interface LoginPageProps {
   onLogin?: (email: string, password: string) => Promise<void>;
+  onGuestLogin?: () => Promise<void>;
 }
 
-export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
+export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onGuestLogin }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>('');
 
@@ -32,6 +33,32 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     }
   };
 
+  const handleGuestLogin = async () => {
+    setIsLoading(true);
+    setError('');
+
+    try {
+      if (onGuestLogin) {
+        await onGuestLogin();
+      } else {
+        // デモ用のゲストログイン
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        // ゲストユーザーとしてローカルストレージに保存
+        localStorage.setItem('isLoggedIn', 'true');
+        localStorage.setItem('userEmail', 'guest@medalbank.com');
+        localStorage.setItem('isGuest', 'true');
+        
+        // ページをリロードしてホームページに遷移
+        window.location.href = '/';
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'ゲストログインに失敗しました');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -47,6 +74,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
 
           <LoginForm
             onSubmit={handleLogin}
+            onGuestLogin={handleGuestLogin}
             isLoading={isLoading}
             error={error}
           />
