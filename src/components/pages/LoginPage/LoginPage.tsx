@@ -60,40 +60,43 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onGuestLogin }) =
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+    <div className="min-h-screen bg-white flex flex-col">
+      {/* ヘッダー */}
+      <div className="bg-blue-500 text-white p-4 text-center">
+        <h1 className="text-2xl font-bold">メダルバンク</h1>
+      </div>
+
+      {/* メインコンテンツ */}
+      <div className="flex-1 flex items-center justify-center p-6">
+        <div className="w-full max-w-sm">
+          {/* ロゴセクション */}
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Medal Bank
-            </h1>
-            <p className="text-gray-600">
-              アカウントにログインしてください
+            <div className="w-20 h-20 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-3xl">🏪</span>
+            </div>
+            <h2 className="text-xl font-semibold text-gray-800 mb-2">
+              ログイン
+            </h2>
+            <p className="text-sm text-gray-600">
+              メダル管理を始めましょう
             </p>
           </div>
 
+          {/* ログインフォーム */}
           <LoginForm
             onSubmit={handleLogin}
             onGuestLogin={handleGuestLogin}
             isLoading={isLoading}
             error={error}
           />
-
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
-              アカウントをお持ちでない方は{' '}
-              <a href="#" className="text-blue-600 hover:text-blue-500 font-medium">
-                こちらから登録
-              </a>
-            </p>
-          </div>
         </div>
+      </div>
 
-        <div className="mt-4 text-center">
-          <p className="text-xs text-gray-500">
-            デモ用: demo@example.com / password
-          </p>
-        </div>
+      {/* フッター */}
+      <div className="p-4 text-center">
+        <p className="text-xs text-gray-500">
+          デモ: demo@example.com / password
+        </p>
       </div>
     </div>
   );

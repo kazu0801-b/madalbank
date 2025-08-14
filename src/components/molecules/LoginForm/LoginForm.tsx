@@ -78,45 +78,32 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       )}
 
       {onGuestLogin ? (
-        <div className="flex justify-center gap-4">
-          <div className="border border-gray-300 rounded-lg p-3 bg-white hover:border-blue-400 transition-colors">
-            <Button
-              type="submit"
-              variant="primary"
-              size="lg"
-              loading={isLoading}
-              disabled={isLoading}
-            >
-              {isLoading ? 'ログイン中...' : 'ログイン'}
-            </Button>
-          </div>
+        <div className="space-y-3">
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full bg-blue-500 text-white py-4 rounded-lg font-medium hover:bg-blue-600 transition-colors disabled:opacity-50"
+          >
+            {isLoading ? 'ログイン中...' : 'ログイン'}
+          </button>
           
-          <div className="border border-gray-300 rounded-lg p-3 bg-white hover:border-gray-400 transition-colors">
-            <Button
-              type="button"
-              variant="secondary"
-              size="lg"
-              onClick={onGuestLogin}
-              disabled={isLoading}
-            >
-              ゲストログイン
-            </Button>
-          </div>
+          <button
+            type="button"
+            onClick={onGuestLogin}
+            disabled={isLoading}
+            className="w-full bg-gray-100 text-gray-700 py-4 rounded-lg font-medium hover:bg-gray-200 transition-colors disabled:opacity-50"
+          >
+            ゲストログイン
+          </button>
         </div>
       ) : (
-        <div className="flex justify-center">
-          <div className="border border-gray-300 rounded-lg p-3 bg-white">
-            <Button
-              type="submit"
-              variant="primary"
-              size="lg"
-              loading={isLoading}
-              disabled={isLoading}
-            >
-              {isLoading ? 'ログイン中...' : 'ログイン'}
-            </Button>
-          </div>
-        </div>
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="w-full bg-blue-500 text-white py-4 rounded-lg font-medium hover:bg-blue-600 transition-colors disabled:opacity-50"
+        >
+          {isLoading ? 'ログイン中...' : 'ログイン'}
+        </button>
       )}
     </form>
   );
