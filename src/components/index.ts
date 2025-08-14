@@ -10,6 +10,7 @@ export { BalanceCard } from './molecules/BalanceCard';
 
 // Organisms
 export { Header } from './organisms/Header';
+export { BottomNavigation } from './organisms/BottomNavigation';
 
 // Templates
 export { MainLayout } from './templates/MainLayout';
