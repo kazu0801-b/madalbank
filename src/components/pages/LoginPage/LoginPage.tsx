@@ -1,33 +1,51 @@
 import { useState } from 'react';
 import { LoginForm } from '../../molecules/LoginForm';
+import { useToast } from '../../organisms/Toast';
+import { authApi } from '../../../utils/api';
 
 interface LoginPageProps {
-  onLogin?: (email: string, password: string) => Promise<void>;
+  onLogin?: (username: string) => Promise<void>;
   onGuestLogin?: () => Promise<void>;
 }
 
 export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onGuestLogin }) => {
+  const { showToast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>('');
 
-  const handleLogin = async (email: string, password: string) => {
+  const handleLogin = async (username: string) => {
     setIsLoading(true);
     setError('');
 
     try {
       if (onLogin) {
-        await onLogin(email, password);
+        await onLogin(username);
       } else {
-        // デモ用のダミー認証
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        if (email === 'demo@example.com' && password === 'password') {
-          console.log('ログイン成功');
+        // APIを使った実際のログイン処理
+        const result = await authApi.login(username);
+        
+        if (result.success && result.data) {
+          // ログイン成功時の処理
+          localStorage.setItem('isLoggedIn', 'true');
+          localStorage.setItem('userToken', result.data.token || '');
+          localStorage.setItem('userName', result.data.user.username);
+          localStorage.setItem('userEmail', result.data.user.email);
+          localStorage.setItem('userId', result.data.user.id.toString());
+          
+          showToast(`ようこそ、${result.data.user.username}さん！`, 'success');
+          
+          // ホームページに遷移
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 1000);
         } else {
-          throw new Error('メールアドレスまたはパスワードが間違っています');
+          throw new Error(result.error || 'ログインに失敗しました');
         }
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'ログインに失敗しました');
+      const errorMessage = err instanceof Error ? err.message : 'ログインに失敗しました';
+      setError(errorMessage);
+      showToast(errorMessage, 'error');
     } finally {
       setIsLoading(false);
     }
@@ -60,43 +78,59 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onGuestLogin }) =
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
-      {/* ヘッダー */}
-      <div className="bg-blue-500 text-white p-4 text-center">
-        <h1 className="text-2xl font-bold">メダルバンク</h1>
-      </div>
-
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col">
       {/* メインコンテンツ */}
       <div className="flex-1 flex items-center justify-center p-6">
-        <div className="w-full max-w-sm">
-          {/* ロゴセクション */}
-          <div className="text-center mb-8">
-            <div className="w-20 h-20 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-3xl">🏪</span>
-            </div>
-            <h2 className="text-xl font-semibold text-gray-800 mb-2">
-              ログイン
-            </h2>
-            <p className="text-sm text-gray-600">
-              メダル管理を始めましょう
-            </p>
+        <div className="w-full max-w-md">
+          <div className="bg-white rounded-2xl shadow-xl p-8">
+            {/* ログインフォーム */}
+            <LoginForm
+              onSubmit={handleLogin}
+              onGuestLogin={handleGuestLogin}
+              isLoading={isLoading}
+              error={error}
+            />
           </div>
 
-          {/* ログインフォーム */}
-          <LoginForm
-            onSubmit={handleLogin}
-            onGuestLogin={handleGuestLogin}
-            isLoading={isLoading}
-            error={error}
-          />
+          {/* 開発者用メニュー */}
+          <div className="mt-6 bg-white rounded-lg shadow-sm p-4">
+            <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+              🔧 開発者メニュー
+            </h3>
+            <div className="grid grid-cols-1 gap-2 text-sm">
+              <a
+                href="/test"
+                className="text-blue-600 hover:text-blue-700 p-2 rounded-lg hover:bg-blue-50 transition-colors"
+              >
+                📊 統合テストページ
+              </a>
+              <button
+                onClick={() => {
+                  localStorage.setItem('isLoggedIn', 'true');
+                  localStorage.setItem('userName', 'デモユーザー');
+                  localStorage.setItem('userEmail', 'demo@example.com');
+                  localStorage.setItem('isGuest', 'true');
+                  window.location.href = '/';
+                }}
+                className="text-left text-green-600 hover:text-green-700 p-2 rounded-lg hover:bg-green-50 transition-colors"
+              >
+                ⚡ クイックログイン（ローカルのみ）
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* フッター */}
       <div className="p-4 text-center">
-        <p className="text-xs text-gray-500">
-          デモ: demo@example.com / password
+        <p className="text-xs text-gray-500 mb-2">
+          🧪 MVP版 - バックエンドAPI連携テスト中
         </p>
+        <div className="flex justify-center space-x-4 text-xs text-gray-400">
+          <span>• testuser でログイン</span>
+          <span>• ゲストモードあり</span>
+          <span>• 統合テスト可能</span>
+        </div>
       </div>
     </div>
   );
