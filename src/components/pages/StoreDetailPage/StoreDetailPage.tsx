@@ -7,12 +7,17 @@ import { Calculator } from '../../molecules/Calculator';
 import { KeyboardInput } from '../../molecules/KeyboardInput';
 import { TransactionCard } from '../../molecules/TransactionCard';
 import { useDeviceType } from '@/hooks/useDeviceType';
-import { balanceApi, transactionApi } from '@/utils/api';
+import { balanceApi, transactionApi, storeApi } from '@/utils/api';
 
 interface Store {
-  id: string;
+  id: number;
   name: string;
-  balance: number;
+  description?: string;
+  color: string;
+  created_at: string;
+  updated_at: string;
+  user_count?: number;
+  total_balance?: number;
 }
 
 interface Transaction {
@@ -53,13 +58,6 @@ export const StoreDetailPage: React.FC<StoreDetailPageProps> = ({ storeId }) => 
   const [inputType, setInputType] = useState<'deposit' | 'withdraw'>('deposit');
   const [isTransactionLoading, setIsTransactionLoading] = useState(false);
 
-  // 店舗データ（実際のアプリではAPIから取得）
-  const stores: Store[] = [
-    { id: '1', name: 'セガ秋葉原', balance: 1850 },
-    { id: '2', name: 'タイトー渋谷', balance: 520 },
-    { id: '3', name: 'ナムコ池袋', balance: 0 }
-  ];
-
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
@@ -73,17 +71,28 @@ export const StoreDetailPage: React.FC<StoreDetailPageProps> = ({ storeId }) => 
         return;
       }
 
-      // 店舗情報を設定
-      const foundStore = stores.find(s => s.id === storeId);
-      if (foundStore) {
-        setStore(foundStore);
+      // 店舗情報をAPIから取得
+      loadStoreData();
+    }
+  }, [storeId, router]);
+
+  const loadStoreData = async () => {
+    try {
+      const storeIdNum = parseInt(storeId);
+      const result = await storeApi.getStore(storeIdNum);
+      
+      if (result.success) {
+        setStore(result.data!.store);
         loadDashboardData();
       } else {
         showToast('店舗が見つかりません', 'error');
         router.push('/');
       }
+    } catch (err) {
+      showToast('店舗情報の取得に失敗しました', 'error');
+      router.push('/');
     }
-  }, [storeId, router]);
+  };
 
   // デバッグ用：APIテスト
   useEffect(() => {
@@ -111,9 +120,10 @@ export const StoreDetailPage: React.FC<StoreDetailPageProps> = ({ storeId }) => 
     setIsLoading(true);
     
     try {
+      const storeIdNum = parseInt(storeId);
       const [balanceResult, transactionsResult] = await Promise.all([
-        balanceApi.getBalance(1),
-        transactionApi.getTransactions(10)
+        balanceApi.getBalance(1, storeIdNum),
+        transactionApi.getTransactions(1, { storeId: storeIdNum, limit: 10 })
       ]);
 
       if (balanceResult.success) {
@@ -149,7 +159,9 @@ export const StoreDetailPage: React.FC<StoreDetailPageProps> = ({ storeId }) => 
     setIsTransactionLoading(true);
     
     try {
+      const storeIdNum = parseInt(storeId);
       const result = await transactionApi.createTransaction({
+        store_id: storeIdNum,
         type: inputType,
         amount,
         description: `${inputType === 'deposit' ? '入金' : '出金'} ${amount}メダル`,
@@ -228,8 +240,13 @@ export const StoreDetailPage: React.FC<StoreDetailPageProps> = ({ storeId }) => 
           {/* メインカード */}
           <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
             {/* ヘッダー */}
-            <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white text-center">
+            <div className="p-6 text-white text-center" style={{ 
+              background: `linear-gradient(to right, ${store.color}, ${store.color}dd)` 
+            }}>
               <h1 className="text-2xl font-bold">{store.name}</h1>
+              {store.description && (
+                <p className="text-sm opacity-90 mt-1">{store.description}</p>
+              )}
             </div>
 
             {/* 残高表示 */}

@@ -1,11 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '../../organisms/Toast';
+import { storeApi, balanceApi } from '@/utils/api';
 
 interface Store {
-  id: string;
+  id: number;
   name: string;
-  balance: number;
+  description?: string;
+  color: string;
+  created_at: string;
+  updated_at: string;
+  user_count?: number;
+  total_balance?: number;
 }
 
 export const StoreSelectPage: React.FC = () => {
@@ -14,11 +20,8 @@ export const StoreSelectPage: React.FC = () => {
   
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userName, setUserName] = useState('');
-  const [stores, setStores] = useState<Store[]>([
-    { id: '1', name: 'セガ秋葉原', balance: 1850 },
-    { id: '2', name: 'タイトー渋谷', balance: 520 },
-    { id: '3', name: 'ナムコ池袋', balance: 0 }
-  ]);
+  const [stores, setStores] = useState<Store[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -30,9 +33,27 @@ export const StoreSelectPage: React.FC = () => {
 
       if (!loggedIn) {
         router.push('/login');
+      } else {
+        loadStores();
       }
     }
   }, [router]);
+
+  const loadStores = async () => {
+    setIsLoading(true);
+    try {
+      const result = await storeApi.getStores();
+      if (result.success) {
+        setStores(result.data!.stores);
+      } else {
+        showToast('店舗情報の取得に失敗しました', 'error');
+      }
+    } catch (err) {
+      showToast('店舗情報の取得に失敗しました', 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('isLoggedIn');
@@ -44,28 +65,48 @@ export const StoreSelectPage: React.FC = () => {
     router.push('/login');
   };
 
-  const handleStoreSelect = (storeId: string) => {
+  const handleStoreSelect = (storeId: number) => {
     router.push(`/store/${storeId}`);
   };
 
-  const handleAddStore = () => {
+  const handleAddStore = async () => {
     const storeName = prompt('店舗名を入力してください:');
     if (storeName && storeName.trim()) {
-      const newStore: Store = {
-        id: Date.now().toString(),
-        name: storeName.trim(),
-        balance: 0
-      };
-      setStores(prev => [...prev, newStore]);
-      showToast(`${storeName} を追加しました`, 'success');
+      try {
+        const result = await storeApi.createStore({
+          name: storeName.trim(),
+          description: '新しい店舗',
+          color: '#10B981',
+          createBalanceForAllUsers: true
+        });
+        
+        if (result.success) {
+          await loadStores(); // 店舗一覧を再読み込み
+          showToast(`${storeName} を追加しました`, 'success');
+        } else {
+          showToast('店舗の追加に失敗しました', 'error');
+        }
+      } catch (err) {
+        showToast('店舗の追加に失敗しました', 'error');
+      }
     }
   };
 
-  const handleDeleteStore = (storeId: string, storeName: string, e: React.MouseEvent) => {
+  const handleDeleteStore = async (storeId: number, storeName: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (confirm(`${storeName} を削除しますか？`)) {
-      setStores(prev => prev.filter(s => s.id !== storeId));
-      showToast(`${storeName} を削除しました`, 'success');
+    if (confirm(`${storeName} を削除しますか？取引履歴も含めて完全に削除されます。`)) {
+      try {
+        const result = await storeApi.deleteStore(storeId, true); // forceDelete = true
+        
+        if (result.success) {
+          await loadStores(); // 店舗一覧を再読み込み
+          showToast(`${storeName} を削除しました`, 'success');
+        } else {
+          showToast('店舗の削除に失敗しました', 'error');
+        }
+      } catch (err) {
+        showToast('店舗の削除に失敗しました', 'error');
+      }
     }
   };
 
@@ -110,45 +151,68 @@ export const StoreSelectPage: React.FC = () => {
 
         {/* 店舗一覧 */}
         <div className="grid gap-4 mb-6">
-          {stores.map((store) => (
-            <div
-              key={store.id}
-              onClick={() => handleStoreSelect(store.id)}
-              className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-md hover:border-blue-300 transition-all duration-200 cursor-pointer group"
-            >
-              <div className="flex justify-between items-center">
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                    <span className="text-2xl">🎮</span>
+          {isLoading ? (
+            <div className="text-center py-8">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+              <p className="text-gray-600 mt-2">店舗情報を読み込み中...</p>
+            </div>
+          ) : stores.length > 0 ? (
+            stores.map((store) => (
+              <div
+                key={store.id}
+                onClick={() => handleStoreSelect(store.id)}
+                className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 cursor-pointer group"
+                style={{ 
+                  borderColor: `${store.color}33`,
+                  '&:hover': { borderColor: store.color }
+                }}
+              >
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center space-x-4">
+                    <div 
+                      className="w-12 h-12 rounded-full flex items-center justify-center"
+                      style={{ backgroundColor: `${store.color}20` }}
+                    >
+                      <span className="text-2xl">🎮</span>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-800 transition-colors">
+                        {store.name}
+                      </h3>
+                      {store.description && (
+                        <p className="text-xs text-gray-500 mb-1">{store.description}</p>
+                      )}
+                      <p className="text-sm text-gray-600">
+                        残高: {(store.total_balance || 0).toLocaleString()}メダル
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">
-                      {store.name}
-                    </h3>
-                    <p className="text-sm text-gray-600">
-                      残高: {store.balance.toLocaleString()}メダル
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={(e) => handleDeleteStore(store.id, store.name, e)}
-                    className="text-red-400 hover:text-red-600 p-2 rounded-md hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
-                    title="店舗を削除"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
-                  <div className="text-blue-400 group-hover:text-blue-600 transition-colors">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={(e) => handleDeleteStore(store.id, store.name, e)}
+                      className="text-red-400 hover:text-red-600 p-2 rounded-md hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
+                      title="店舗を削除"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                    <div style={{ color: store.color }} className="transition-colors">
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
                   </div>
                 </div>
               </div>
+            ))
+          ) : (
+            <div className="text-center py-8">
+              <div className="text-3xl mb-2">🏪</div>
+              <p className="text-gray-500">店舗がありません</p>
+              <p className="text-sm text-gray-400">下のボタンから店舗を追加してください</p>
             </div>
-          ))}
+          )}
         </div>
 
         {/* 店舗追加ボタン */}
