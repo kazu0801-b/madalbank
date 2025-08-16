@@ -127,7 +127,29 @@ const performanceTracker = (req, res, next) => {
  * CORS設定
  */
 const corsHeaders = (req, res, next) => {
-  res.header('Access-Control-Allow-Origin', process.env.FRONTEND_URL || 'http://localhost:3000');
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:3001', 
+    'http://localhost:3002',
+    'http://localhost:3003',
+    'http://localhost:5173', // Vite default
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:3001',
+    'http://127.0.0.1:3002', 
+    'http://127.0.0.1:3003',
+    'http://127.0.0.1:5173'
+  ];
+  
+  const origin = req.headers.origin;
+  
+  // 許可されたオリジンからのリクエストか、環境変数で指定されたURLの場合はアクセス許可
+  if (allowedOrigins.includes(origin) || origin === process.env.FRONTEND_URL) {
+    res.header('Access-Control-Allow-Origin', origin);
+  } else if (!origin) {
+    // オリジンがない場合（同一ドメインなど）はデフォルトを設定
+    res.header('Access-Control-Allow-Origin', process.env.FRONTEND_URL || 'http://localhost:3003');
+  }
+  
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   res.header('Access-Control-Allow-Credentials', 'true');
