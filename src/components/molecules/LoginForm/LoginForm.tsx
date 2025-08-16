@@ -49,7 +49,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
               required
             />
             <p className="text-xs text-gray-500 mt-1">
-              MVPデモ用: 'testuser' でログインできます
+              MVPデモ用: &apos;testuser&apos; でログインできます
             </p>
           </div>
         </div>

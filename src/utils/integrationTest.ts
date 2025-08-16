@@ -4,7 +4,7 @@ interface TestResult {
   name: string;
   success: boolean;
   message: string;
-  data?: any;
+  data?: unknown;
 }
 
 export const runIntegrationTests = async (): Promise<TestResult[]> => {

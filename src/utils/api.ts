@@ -1,4 +1,32 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+// 動的にAPIベースURLを決定
+const getApiBaseUrl = () => {
+  // 環境変数が設定されている場合はそれを使用
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+  
+  // ブラウザ環境でのみ実行
+  if (typeof window !== 'undefined') {
+    const currentPort = window.location.port;
+    
+    // フロントエンドポートに応じてAPIポートを自動選択
+    switch (currentPort) {
+      case '3000':
+      case '3001':
+      case '3002':
+      case '3003':
+      case '5173': // Vite default
+        return 'http://localhost:8000';
+      default:
+        return 'http://localhost:8000';
+    }
+  }
+  
+  // サーバーサイドレンダリング時のデフォルト
+  return 'http://localhost:8000';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 interface ApiResponse<T> {
   success: boolean;
@@ -90,7 +118,7 @@ export const transactionApi = {
       message: string;
     }>('/api/transactions', {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: JSON.stringify({ ...data, user_id: 1 }),
     });
   },
 
@@ -107,7 +135,7 @@ export const transactionApi = {
         created_at: string;
       }>;
       message: string;
-    }>(`/api/transactions?limit=${limit}`);
+    }>(`/api/transactions?userId=1&limit=${limit}`);
   },
 };
 

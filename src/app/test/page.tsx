@@ -1,13 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { runIntegrationTests } from '@/utils/integrationTest';
 
 interface TestResult {
   name: string;
   success: boolean;
   message: string;
-  data?: any;
+  data?: unknown;
 }
 
 export default function TestPage() {
@@ -99,7 +100,7 @@ export default function TestPage() {
                       {result.name}
                     </h3>
                   </div>
-                  {result.data && (
+                  {Boolean(result.data && result.data !== null && typeof result.data === 'object') && (
                     <button
                       onClick={() => toggleDetails(result.name)}
                       className="text-sm text-blue-600 hover:text-blue-700"
@@ -115,7 +116,7 @@ export default function TestPage() {
                   {result.message}
                 </p>
 
-                {showDetails[result.name] && result.data && (
+                {Boolean(showDetails[result.name] && result.data && result.data !== null && typeof result.data === 'object') && (
                   <div className="mt-3 p-3 bg-gray-100 rounded border">
                     <h4 className="text-xs font-semibold text-gray-600 mb-2">
                       レスポンスデータ:
@@ -144,12 +145,12 @@ export default function TestPage() {
         </div>
 
         <div className="mt-6 text-center">
-          <a
+          <Link
             href="/"
             className="text-blue-600 hover:text-blue-700 underline"
           >
             ← ホームに戻る
-          </a>
+          </Link>
         </div>
       </div>
     </div>

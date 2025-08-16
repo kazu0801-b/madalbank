@@ -1,3 +1,5 @@
+import Image from 'next/image';
+
 interface CardProps {
   children: React.ReactNode;
   title?: string;
@@ -34,7 +36,7 @@ export const Card: React.FC<CardProps> = ({
     <div className={cardClasses}>
       {image && (
         <figure>
-          <img src={image} alt={imageAlt || 'Card image'} />
+          <Image src={image} alt={imageAlt || 'Card image'} width={300} height={200} />
         </figure>
       )}
       <div className="card-body">

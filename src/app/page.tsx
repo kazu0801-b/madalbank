@@ -1,7 +1,7 @@
 'use client';
 
-import { HomePageAPI } from '@/components/pages/HomePage/HomePageAPI';
+import { StoreSelectPage } from '@/components/pages/StoreSelectPage';
 
 export default function Home() {
-  return <HomePageAPI />;
+  return <StoreSelectPage />;
 }

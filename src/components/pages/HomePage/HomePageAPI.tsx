@@ -29,7 +29,7 @@ export const HomePageAPI: React.FC = () => {
   const { showToast } = useToast();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userName, setUserName] = useState('');
-  const [userEmail, setUserEmail] = useState('');
+  const [, setUserEmail] = useState('');
   const [balance, setBalance] = useState<Balance | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(false);
