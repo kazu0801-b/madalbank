@@ -11,7 +11,7 @@ interface Transaction {
   amount: number;
   balance_before: number;
   balance_after: number;
-  description: string;
+  description?: string;
   created_at: string;
   type_display?: string;
 }
@@ -20,7 +20,7 @@ interface Balance {
   user_id: number;
   username: string;
   total_balance: number;
-  updated_at: string;
+  updated_at?: string;
   message: string;
 }
 
@@ -60,8 +60,8 @@ export const HomePageAPI: React.FC = () => {
     try {
       // 残高と取引履歴を並行して取得
       const [balanceResult, transactionsResult] = await Promise.all([
-        balanceApi.getBalance(1),
-        transactionApi.getTransactions(10)
+        balanceApi.getBalance(1, 1), // ユーザーID=1, 店舗ID=1（ラウンドワン）
+        transactionApi.getTransactions(1, { storeId: 1, limit: 10 })
       ]);
 
       if (balanceResult.success) {
@@ -108,6 +108,7 @@ export const HomePageAPI: React.FC = () => {
     setIsTransactionLoading(true);
     try {
       const result = await transactionApi.createTransaction({
+        store_id: 1, // デフォルト店舗（ラウンドワン）
         type: 'deposit',
         amount,
         description: `クイック入金 ${amount}メダル`,
@@ -252,7 +253,7 @@ export const HomePageAPI: React.FC = () => {
             </span>
             <span className="flex items-center">
               <span className="mr-1">📅</span>
-              {balance ? formatDate(balance.updated_at) : '---'}
+              {balance?.updated_at ? formatDate(balance.updated_at) : '---'}
             </span>
           </div>
         </div>

@@ -29,7 +29,7 @@ interface Balance {
   user_id: number;
   username: string;
   total_balance: number;
-  updated_at: string;
+  updated_at?: string;
   message: string;
 }
 
@@ -162,6 +162,7 @@ export const NewHomePage: React.FC = () => {
     
     try {
       const result = await transactionApi.createTransaction({
+        store_id: 1, // デフォルト店舗（ラウンドワン）
         type: calculatorType,
         amount,
         description: `${calculatorType === 'deposit' ? '入金' : '出金'} ${amount}メダル`,
