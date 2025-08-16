@@ -22,15 +22,55 @@ const cors = require('cors')
 require('dotenv').config() // .env ファイルから環境変数を読み込み
 
 const { initDatabase } = require('./database')
+// Day4追加: 新しいミドルウェア
+const { logger, loggerMiddleware } = require('./utils/logger')
+const { 
+  responseFormatter, 
+  addApiVersion, 
+  performanceTracker, 
+  corsHeaders, 
+  requestLogger 
+} = require('./middleware/response')
+const { 
+  rateLimit, 
+  addSecurityHeaders 
+} = require('./middleware/validation')
 
 const app = express()
 const PORT = process.env.PORT || 8000 // 環境変数からポート取得、デフォルト8000
 
 // ===================================
-// ミドルウェア設定
+// ミドルウェア設定（Day4強化版）
 // ===================================
 
-// CORS設定 - フロントエンド（Next.js）からのアクセスを許可
+// Day4: セキュリティヘッダー追加
+app.use(addSecurityHeaders)
+
+// Day4: CORS設定強化
+app.use(corsHeaders)
+
+// Day4: レート制限（100リクエスト/分）
+app.use(rateLimit(100, 60000))
+
+// Day4: リクエストログ
+app.use(requestLogger)
+
+// Day4: パフォーマンス測定
+app.use(performanceTracker)
+
+// Day4: APIバージョン情報
+app.use(addApiVersion)
+
+// Day4: レスポンス形式統一
+app.use(responseFormatter)
+
+// Day4: 構造化ログ
+app.use(loggerMiddleware)
+
+// JSON形式のリクエストボディをパース
+app.use(express.json())
+
+// 従来のCORS設定（バックアップ）
 app.use(cors({
   origin: [
     'http://localhost:3000',     // Next.js開発サーバー
@@ -38,18 +78,6 @@ app.use(cors({
   ],
   credentials: true // クッキーやセッション情報を含むリクエストを許可
 }))
-
-// JSON形式のリクエストボディをパース
-app.use(express.json())
-
-// 開発用: 全リクエストをログ出力
-app.use((req, res, next) => {
-  console.log(`📥 ${req.method} ${req.path}`)
-  if (Object.keys(req.body).length > 0) {
-    console.log('   Body:', req.body)
-  }
-  next()
-})
 
 // ===================================
 // データベース初期化

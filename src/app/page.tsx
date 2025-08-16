@@ -1,7 +1,7 @@
 'use client';
 
-import { HomePage } from '@/components';
+import { StoreSelectPage } from '@/components/pages/StoreSelectPage';
 
 export default function Home() {
-  return <HomePage />;
+  return <StoreSelectPage />;
 }

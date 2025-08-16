@@ -1,0 +1,1 @@
+export { StoreTabs } from './StoreTabs';

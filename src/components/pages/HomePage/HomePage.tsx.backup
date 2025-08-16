@@ -58,16 +58,20 @@ export const HomePage: React.FC = () => {
   };
 
   const getAllRecentTransactions = () => {
-    const allTransactions: Array<{ store: Store; record: any; }> = [];
+    const allTransactions: Array<{ store: Store; record: unknown; }> = [];
     stores.forEach(store => {
       const records = dataStore.getMedalRecordsByStoreId(store.id).slice(0, 3);
       records.forEach(record => {
         allTransactions.push({ store, record });
       });
     });
-    return allTransactions.sort((a, b) => 
-      new Date(b.record.transactionDate).getTime() - new Date(a.record.transactionDate).getTime()
-    ).slice(0, 5);
+    return allTransactions.sort((a, b) => {
+      const aRecord = a.record as { transactionDate?: Date };
+      const bRecord = b.record as { transactionDate?: Date };
+      const aDate = aRecord.transactionDate || new Date(0);
+      const bDate = bRecord.transactionDate || new Date(0);
+      return new Date(bDate).getTime() - new Date(aDate).getTime();
+    }).slice(0, 5);
   };
 
   if (!isLoggedIn) {
