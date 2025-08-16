@@ -110,6 +110,9 @@ app.use('/api/auth', require('./routes/auth'))               // 認証関連API
 app.use('/api/stats', require('./routes/stats'))             // 統計情報API
 app.use('/api/batch', require('./routes/batch'))             // バッチ処理API
 
+// Day5拡張エンドポイント
+app.use('/api/stores', require('./routes/stores'))           // 店舗関連API
+
 // ===================================
 // エラーハンドリング
 // ===================================
