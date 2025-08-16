@@ -15,11 +15,12 @@ const router = express.Router()
 /**
  * 取引履歴取得 API (Day2 拡張版)
  * 
- * URL: GET /api/transactions?userId=1&limit=10&type=deposit&dateFrom=2024-01-01
+ * URL: GET /api/transactions?userId=1&limit=10&type=deposit&dateFrom=2024-01-01&storeId=1
  * 目的: 指定ユーザーの取引履歴を新しい順で取得（フィルタ機能付き）
  * 
  * クエリパラメータ:
  * - userId: ユーザーID（必須）
+ * - storeId: 店舗ID（省略時は全店舗）
  * - limit: 取得件数（デフォルト10件、最大100件）
  * - type: 取引種別フィルタ（"deposit", "withdraw"）
  * - dateFrom: 開始日時フィルタ（YYYY-MM-DD形式）
@@ -44,6 +45,7 @@ const router = express.Router()
 router.get('/', (req, res) => {
   // Day2 拡張: より多くのクエリパラメータを処理
   const userId = parseInt(req.query.userId)
+  const storeId = req.query.storeId ? parseInt(req.query.storeId) : null
   const limit = Math.min(parseInt(req.query.limit) || 10, 100) // 最大100件制限
   const type = req.query.type // deposit, withdraw, または undefined
   const dateFrom = req.query.dateFrom // YYYY-MM-DD
@@ -93,6 +95,12 @@ router.get('/', (req, res) => {
   let whereConditions = ['user_id = ?']
   let queryParams = [userId]
 
+  // 店舗フィルタ
+  if (storeId) {
+    whereConditions.push('store_id = ?')
+    queryParams.push(storeId)
+  }
+
   // 取引種別フィルタ
   if (type) {
     whereConditions.push('type = ?')
@@ -109,24 +117,28 @@ router.get('/', (req, res) => {
     queryParams.push(dateTo)
   }
 
-  // メインクエリ: 取引履歴を新しい順で取得
+  // メインクエリ: 取引履歴を新しい順で取得（店舗情報含む）
   const query = `
     SELECT 
-      id,              -- 取引ID
-      type,            -- 取引種別 (deposit/withdraw)
-      amount,          -- 取引金額
-      balance_before,  -- 取引前残高
-      balance_after,   -- 取引後残高
-      description,     -- 取引説明
-      created_at,      -- 取引日時
+      t.id,              -- 取引ID
+      t.type,            -- 取引種別 (deposit/withdraw)
+      t.amount,          -- 取引金額
+      t.balance_before,  -- 取引前残高
+      t.balance_after,   -- 取引後残高
+      t.description,     -- 取引説明
+      t.created_at,      -- 取引日時
+      t.store_id,        -- 店舗ID
+      s.name as store_name,  -- 店舗名
+      s.color as store_color, -- 店舗カラー
       CASE 
-        WHEN type = 'deposit' THEN '入金'
-        WHEN type = 'withdraw' THEN '払い出し'
-        ELSE type
+        WHEN t.type = 'deposit' THEN '入金'
+        WHEN t.type = 'withdraw' THEN '払い出し'
+        ELSE t.type
       END as type_display  -- Day2追加: 日本語表示用
-    FROM transactions
+    FROM transactions t
+    LEFT JOIN stores s ON t.store_id = s.id
     WHERE ${whereConditions.join(' AND ')}  -- 動的WHERE句
-    ORDER BY created_at DESC  -- 新しい順
+    ORDER BY t.created_at DESC  -- 新しい順
     LIMIT ?           -- 件数制限
   `
 
@@ -242,6 +254,7 @@ router.get('/', (req, res) => {
  * リクエストボディ:
  * {
  *   "user_id": 1,
+ *   "store_id": 1,         // 店舗ID（必須）
  *   "type": "deposit",     // "deposit"(入金) または "withdraw"(払い出し)
  *   "amount": 500,         // 金額（メダル数）
  *   "description": "説明"  // 任意の説明文
@@ -260,19 +273,19 @@ router.get('/', (req, res) => {
  */
 router.post('/', (req, res) => {
   // リクエストボディから必要な値を取得
-  const { user_id, type, amount, description } = req.body
+  const { user_id, store_id, type, amount, description } = req.body
 
-  console.log(`📥 取引処理リクエスト: ユーザーID=${user_id}, 種別=${type}, 金額=${amount}`)
+  console.log(`📥 取引処理リクエスト: ユーザーID=${user_id}, 店舗ID=${store_id}, 種別=${type}, 金額=${amount}`)
 
   // ===================================
   // バリデーション（入力値チェック）
   // ===================================
 
   // 必須項目チェック
-  if (!user_id || !type || !amount) {
+  if (!user_id || !store_id || !type || !amount) {
     return res.status(400).json({
       error: '必要な情報が不足しています',
-      required: ['user_id', 'type', 'amount'],
+      required: ['user_id', 'store_id', 'type', 'amount'],
       received: req.body
     })
   }
@@ -305,7 +318,8 @@ router.post('/', (req, res) => {
     // Step 1: 現在の残高を取得
     console.log(`🔍 ユーザーID ${user_id} の現在残高を取得中...`)
     
-    db.get('SELECT amount FROM balance WHERE user_id = ?', [user_id], (err, row) => {
+    // 店舗別残高を取得または作成
+    db.get('SELECT amount FROM balance WHERE user_id = ? AND store_id = ?', [user_id, store_id], (err, row) => {
       if (err) {
         console.error('❌ 残高取得エラー:', err.message)
         db.close()
@@ -315,17 +329,29 @@ router.post('/', (req, res) => {
         })
       }
 
+      // 店舗別残高が存在しない場合は作成
       if (!row) {
-        console.log(`⚠️  ユーザーID ${user_id} の残高情報が見つかりません`)
-        db.close()
-        return res.status(404).json({
-          error: 'ユーザーの残高情報が見つかりません',
-          user_id: user_id,
-          hint: 'MVP版ではユーザーID=1のみ利用可能です'
+        console.log(`📝 ユーザーID ${user_id} の店舗ID ${store_id} 用残高を作成中...`)
+        db.run('INSERT INTO balance (user_id, store_id, amount) VALUES (?, ?, 0)', [user_id, store_id], function(insertErr) {
+          if (insertErr) {
+            console.error('❌ 残高作成エラー:', insertErr.message)
+            db.close()
+            return res.status(500).json({
+              error: '残高データの作成に失敗しました',
+              details: process.env.NODE_ENV === 'development' ? insertErr.message : 'Database error'
+            })
+          }
+          // 作成後、残高0で処理続行
+          processTransaction(0)
         })
+        return
       }
 
-      const currentBalance = row.amount
+      // 既存残高で処理続行
+      processTransaction(row.amount)
+    })
+
+    function processTransaction(currentBalance) {
       let newBalance
 
       // Step 2: 新しい残高を計算
@@ -353,8 +379,8 @@ router.post('/', (req, res) => {
       // Step 3: 残高を更新
       console.log(`🔄 残高を ${currentBalance} → ${newBalance} に更新中...`)
       
-      db.run('UPDATE balance SET amount = ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?', 
-        [newBalance, user_id], 
+      db.run('UPDATE balance SET amount = ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ? AND store_id = ?', 
+        [newBalance, user_id, store_id], 
         function(err) {
           if (err) {
             console.error('❌ 残高更新エラー:', err.message)
@@ -369,9 +395,9 @@ router.post('/', (req, res) => {
           console.log(`📝 取引履歴を記録中...`)
           
           db.run(`
-            INSERT INTO transactions (user_id, type, amount, balance_before, balance_after, description)
-            VALUES (?, ?, ?, ?, ?, ?)
-          `, [user_id, type, amount, currentBalance, newBalance, description || ''], 
+            INSERT INTO transactions (user_id, store_id, type, amount, balance_before, balance_after, description)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+          `, [user_id, store_id, type, amount, currentBalance, newBalance, description || ''], 
           function(err) {
             if (err) {
               console.error('❌ 取引履歴追加エラー:', err.message)
@@ -400,7 +426,7 @@ router.post('/', (req, res) => {
           })
         }
       )
-    })
+    }
   })
 })
 

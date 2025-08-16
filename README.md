@@ -1,90 +1,186 @@
-# MedalBank - メダル管理システム
+# MedalBank - ゲームセンターメダル管理システム
 
-メダルゲームセンター向けのメダル残高管理システム。顧客のメダル残高を管理し、入金・払い出し履歴を追跡します。
+複数のゲームセンター店舗でメダル残高を管理するWebアプリケーション。各店舗でのメダル入金・出金を個別に管理し、取引履歴を追跡できます。
 
-## 要件定義
+## 🎮 システム概要
 
-### システム概要
-ゲームセンターのメダル残高を電子的に管理するWebアプリケーション。
+ゲームセンターのメダル残高を電子的に管理し、複数店舗での残高を統合管理できるWebアプリケーションです。
 
-### 主要機能
-1. **ユーザー認証**
-   - ログイン・ログアウト機能
+## ✨ 実装済み機能
+
+### 1. **ユーザー認証**
+   - シンプルなユーザー名ベース認証
    - セッション管理
 
-2. **メダル残高管理**
-   - リアルタイム残高表示
-   - 残高照会履歴
+### 2. **店舗管理**
+   - 複数店舗の作成・管理
+   - 店舗ごとの残高分離
+   - 店舗別統計情報
 
-3. **入出金管理**
-   - メダル入金処理
+### 3. **メダル残高管理**
+   - 店舗別残高表示
+   - 総残高の自動計算
+   - リアルタイム残高更新
+
+### 4. **入出金管理**
+   - 店舗別メダル入金処理
    - メダル払い出し処理
-   - 不正防止（残高不足チェック等）
+   - 残高不足チェック
 
-4. **履歴管理**
-   - 全取引履歴の記録
-   - 日付・金額・種別での検索・フィルタ
+### 5. **取引履歴管理**
+   - 店舗別・期間別の取引履歴
+   - 取引種別での絞り込み
+   - 詳細な検索・フィルタ機能
 
-5. **有効期限管理**
-   - メダルの有効期限設定
-   - 期限切れの自動処理
+### 6. **統計情報**
+   - 店舗別統計データ
+   - 取引サマリー
+   - ユーザー別統計
 
-### 技術要件
+## 🛠 技術スタック
+
 - **フロントエンド**: Next.js 15 + TypeScript + Tailwind CSS + shadcn/ui
-- **バックエンド**: Go + Gin Framework
+- **バックエンド**: Node.js + Express
 - **データベース**: SQLite
-- **認証**: NextAuth.js or Firebase Auth
-- **デプロイ**: Vercel (フロントエンド) + Render (バックエンド)
+- **API**: RESTful API
+- **開発ツール**: ESLint, Prettier
 
-### 非機能要件
-- レスポンス時間: 3秒以内
-- 同時接続: 100ユーザー対応
-- データバックアップ: 日次自動
-- セキュリティ: HTTPS通信、入力サニタイズ
+## 📁 プロジェクト構成
 
-### API仕様
 ```
-GET  /api/balance/:userId     - 残高取得
-POST /api/deposit             - 入金
-POST /api/withdraw            - 払い出し  
-GET  /api/history/:userId     - 取引履歴
-POST /auth/login              - ログイン
-POST /auth/logout             - ログアウト
-GET  /api/admin/users         - ユーザー一覧（管理者）
-GET  /api/admin/stats         - 統計情報（管理者）
+medalbank/
+├── src/                          # フロントエンド
+│   ├── app/                      # Next.js App Router
+│   ├── components/               # UIコンポーネント
+│   ├── types/                    # TypeScript型定義
+│   └── utils/                    # ユーティリティ
+└── medalbank-api/                # バックエンドAPI
+    ├── routes/                   # APIルート
+    ├── middleware/               # ミドルウェア
+    ├── utils/                    # ヘルパー関数
+    └── medalbank.db              # SQLiteデータベース
 ```
 
-## Getting Started
+## 🗄️ データベース構造
 
-First, run the development server:
+- **stores**: 店舗情報
+- **users**: ユーザー情報
+- **balance**: 店舗別残高
+- **transactions**: 取引履歴
+- **login_history**: ログイン履歴
 
+## 📡 API仕様
+
+詳細なAPIドキュメントは [`medalbank-api/API_DOCUMENTATION.md`](./medalbank-api/API_DOCUMENTATION.md) を参照してください。
+
+### 主要エンドポイント
+```
+GET  /api/stores                  - 店舗一覧
+GET  /api/balance/:userId         - 残高取得
+POST /api/transactions            - 取引作成
+GET  /api/transactions            - 取引履歴
+POST /api/auth/login              - ログイン
+```
+
+## 🚀 セットアップ・起動方法
+
+### 1. リポジトリのクローン
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone <repository-url>
+cd medalbank
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. 依存関係のインストール
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+**フロントエンド（メインディレクトリ）：**
+```bash
+npm install
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+**バックエンド（APIサーバー）：**
+```bash
+cd medalbank-api
+npm install
+```
 
-## Learn More
+### 3. 開発サーバーの起動
 
-To learn more about Next.js, take a look at the following resources:
+**バックエンドAPIサーバー（ポート8000）：**
+```bash
+cd medalbank-api
+npm start
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+**フロントエンド開発サーバー（ポート3003）：**
+```bash
+# メインディレクトリで
+npm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 4. アクセス
+- **フロントエンド**: http://localhost:3003
+- **バックエンドAPI**: http://localhost:8000
+- **ヘルスチェック**: http://localhost:8000/health
 
-## Deploy on Vercel
+## 🧪 テスト
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 統合テスト
+```bash
+# フロントエンドでテストページにアクセス
+http://localhost:3003/test
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### APIテスト
+```bash
+# ヘルスチェック
+curl http://localhost:8000/health
+
+# 店舗一覧取得
+curl http://localhost:8000/api/stores
+
+# 残高取得
+curl http://localhost:8000/api/balance/1
+```
+
+## 📦 デプロイ
+
+### フロントエンド（Vercel）
+1. Vercelにプッシュ
+2. 環境変数 `NEXT_PUBLIC_API_URL` を設定
+
+### バックエンド（Railway / Render）
+1. リポジトリをデプロイプラットフォームに接続
+2. ビルドコマンド: `npm install`
+3. 開始コマンド: `npm start`
+4. ポート: 8000
+
+## 🎯 デモユーザー
+
+- **ユーザー名**: `testuser`
+- **パスワード**: 不要（ユーザー名のみでログイン可能）
+
+## 🔧 開発情報
+
+### 利用可能な店舗
+1. **ラウンドワン** - メインのゲームセンター (#3B82F6)
+2. **セガ** - サブのゲームセンター (#EF4444)
+3. **タイトーステーション** - レトロゲーム中心 (#F59E0B)
+
+### 開発時のポート設定
+- フロントエンド: 3003 (デフォルト)
+- バックエンドAPI: 8000
+- 自動CORS設定により、3000-3003, 5173番ポートからのアクセスが許可されています
+
+## 🐛 トラブルシューティング
+
+### CORSエラーが発生する場合
+1. バックエンドAPIサーバーが起動していることを確認
+2. フロントエンドのポートが3000-3003の範囲内であることを確認
+
+### データベースエラーが発生する場合
+1. `medalbank-api/medalbank.db` ファイルの権限を確認
+2. APIサーバーを再起動
+
+## 📝 ライセンス
+
+MIT License
