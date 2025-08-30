@@ -16,8 +16,8 @@ import type {
 
 // 動的にAPIベースURLを決定
 const getApiBaseUrl = (): string => {
-  // 環境変数が設定されている場合はそれを使用
-  if (process.env.NEXT_PUBLIC_API_URL) {
+  // 環境変数が設定されている場合はそれを使用（ただし無効なURLは除外）
+  if (process.env.NEXT_PUBLIC_API_URL && !process.env.NEXT_PUBLIC_API_URL.includes('your-railway-url')) {
     return process.env.NEXT_PUBLIC_API_URL;
   }
   
