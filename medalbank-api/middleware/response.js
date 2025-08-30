@@ -137,13 +137,19 @@ const corsHeaders = (req, res, next) => {
     'http://127.0.0.1:3001',
     'http://127.0.0.1:3002', 
     'http://127.0.0.1:3003',
-    'http://127.0.0.1:5173'
+    'http://127.0.0.1:5173',
+    // Vercel deployment domains
+    'https://madalbank-git-main-kmorikawas-projects.vercel.app',
+    // Add pattern for all Vercel domains
+    ...(process.env.NODE_ENV === 'production' ? [] : [])
   ];
   
   const origin = req.headers.origin;
   
   // 許可されたオリジンからのリクエストか、環境変数で指定されたURLの場合はアクセス許可
-  if (allowedOrigins.includes(origin) || origin === process.env.FRONTEND_URL) {
+  const isVercelDomain = origin && origin.includes('vercel.app');
+  
+  if (allowedOrigins.includes(origin) || origin === process.env.FRONTEND_URL || isVercelDomain) {
     res.header('Access-Control-Allow-Origin', origin);
   } else if (!origin) {
     // オリジンがない場合（同一ドメインなど）はデフォルトを設定
