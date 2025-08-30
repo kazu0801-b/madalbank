@@ -26,10 +26,10 @@ const getApiBaseUrl = (): string => {
     const hostname = window.location.hostname;
     const port = window.location.port;
     
-    // 本番環境（Renderなど）の判定
+    // 本番環境（Vercel + Render構成）の判定
     if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
-      // 本番環境では同じドメインのAPIを使用
-      return `${window.location.protocol}//${window.location.host}`;
+      // Vercel + Render構成：RenderのAPIサーバーを使用
+      return 'https://madalbank.onrender.com';
     }
     
     // 開発環境：フロントエンドポートに応じてAPIポートを自動選択
