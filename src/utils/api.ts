@@ -23,10 +23,17 @@ const getApiBaseUrl = (): string => {
   
   // ブラウザ環境でのみ実行
   if (typeof window !== 'undefined') {
-    const currentPort = window.location.port;
+    const hostname = window.location.hostname;
+    const port = window.location.port;
     
-    // フロントエンドポートに応じてAPIポートを自動選択
-    switch (currentPort) {
+    // 本番環境（Renderなど）の判定
+    if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
+      // 本番環境では同じドメインのAPIを使用
+      return `${window.location.protocol}//${window.location.host}`;
+    }
+    
+    // 開発環境：フロントエンドポートに応じてAPIポートを自動選択
+    switch (port) {
       case '3000':
       case '3001':
       case '3002':
