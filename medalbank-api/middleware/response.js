@@ -140,6 +140,7 @@ const corsHeaders = (req, res, next) => {
     'http://127.0.0.1:5173',
     // Vercel deployment domains
     'https://madalbank-git-main-kmorikawas-projects.vercel.app',
+    'https://madalbank.vercel.app',
     // Add pattern for all Vercel domains
     ...(process.env.NODE_ENV === 'production' ? [] : [])
   ];
